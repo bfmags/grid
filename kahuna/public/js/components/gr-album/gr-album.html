@@ -13,12 +13,17 @@
                        'image-info__editor--saving': albumEditForm.$waiting,
                        'text-input': true}"
           onbeforesave="ctrl.save($data)">
-        <span ng:if="! ctrl.hasAlbum">
-            Unknown (click ✎ to add)
-        </span>
+
+        <span ng:if="!ctrl.hasAlbum">Unknown (click ✎ to add)</span>
 
         <span ng:if="ctrl.hasAlbum">
-            {{ctrl.album.title}}
+            <span ng:if="ctrl.hasSingleAlbum">
+                {{ctrl.album.title}}
+            </span>
+
+            <span ng:if="!ctrl.hasSingleAlbum">
+                Multiple albums (click ✎ to edit <strong>all</strong>)
+            </span>
         </span>
     </span>
 </section>
