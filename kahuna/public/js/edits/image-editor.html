@@ -197,6 +197,16 @@
                 </ui-labeller>
             </div>
         </div>
+        <div class="result-editor__field-container flex-container flex-center">
+            <span class="result-editor__field-label flex-no-shrink text-small">
+                Album
+            </span>
+            <gr-album class="flex-spacer"
+                      images="[ctrl.image]"
+                      with-batch="ctrl.withBatch"
+                      edit-inline="true">
+            </gr-album>
+        </div>
         <div class="result-editor__field-container" ng:if=":: ctrl.image.data.uploadInfo.filename">
             <div class="result-editor__field-label text-small">File name</div>
             <div class="result-editor__field-value">{{:: ctrl.image.data.uploadInfo.filename}}</div>

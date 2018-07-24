@@ -1,5 +1,6 @@
 import angular from 'angular';
 
+import './gr-album.css';
 import template from './gr-album.html';
 
 import '../../image/service';
@@ -13,34 +14,46 @@ export const album = angular.module('gr.album', [
 ]);
 
 album.controller('GrAlbumCtrl', [
+    '$rootScope',
     '$scope',
     'imageService',
     'mediaApi',
     'imageAccessor',
     'albumService',
 
-    function($scope, imageService, mediaApi, imageAccessor, albumService) {
+    function($rootScope, $scope, imageService, mediaApi, imageAccessor, albumService) {
         const ctrl = this;
 
+        function refreshForOne() {
+            const apiAlbum = imageAccessor.getAlbum(ctrl.image[0]);
+            ctrl.hasAlbum = !!apiAlbum.data;
+            ctrl.album = ctrl.hasAlbum && apiAlbum.data;
+            ctrl.hasSingleAlbum = true;
+        }
+
         function refresh() {
-            const apiAlbums = ctrl.images.map(image => imageAccessor.getAlbum(image));
+            const imagesArray = Array.from(ctrl.images);
 
-            const albums = apiAlbums.reduce((acc, album) => {
-                return album.data ? [...acc, album.data] : acc;
-            }, []);
-
-            ctrl.hasAlbum = albums.length > 0;
-
-            if (!ctrl.hasAlbum) {
-                ctrl.hasMultipleAlbums = false;
+            if (imagesArray.length === 1) {
+                refreshForOne();
             } else {
-                const allImagesHaveAlbum = albums.length === Array.from(ctrl.images).length;
-                const uniqueAlbumTitles = new Set(albums.map(album => album.title));
+                const apiAlbums = ctrl.images.map(image => imageAccessor.getAlbum(image));
 
-                ctrl.hasSingleAlbum = uniqueAlbumTitles.size === 1 && allImagesHaveAlbum;
+                const albums = apiAlbums.reduce((acc, album) => {
+                    return album.data ? [...acc, album.data] : acc;
+                }, []);
 
-                if (ctrl.hasSingleAlbum) {
-                    ctrl.album = albums[0];
+                ctrl.hasAlbum = albums.length > 0;
+
+                if (ctrl.hasAlbum) {
+                    const allImagesHaveAlbum = albums.length === imagesArray.length;
+                    const uniqueAlbumTitles = new Set(albums.map(album => album.title));
+
+                    ctrl.hasSingleAlbum = uniqueAlbumTitles.size === 1 && allImagesHaveAlbum;
+
+                    if (ctrl.hasSingleAlbum) {
+                        ctrl.album = albums[0];
+                    }
                 }
             }
         }
@@ -64,6 +77,16 @@ album.controller('GrAlbumCtrl', [
                 .then(() => refresh());
         };
 
+        const batchApplyEvent = 'events:batch-apply:album';
+
+        if (Boolean(ctrl.withBatch)) {
+            $scope.$on(batchApplyEvent, (e, { title }) => {
+                ctrl.save(title);
+            });
+
+            ctrl.batchApply = (title) => $rootScope.$broadcast(batchApplyEvent, { title });
+        }
+
         $scope.$watchCollection(() => Array.from(ctrl.images), refresh);
     }
 ]);
@@ -72,7 +95,9 @@ album.directive('grAlbum', [function() {
     return {
         restrict: 'E',
         scope: {
-            images: '='
+            images: '=',
+            withBatch: '=?',
+            editInline: '=?'
         },
         controller: 'GrAlbumCtrl',
         controllerAs: 'ctrl',

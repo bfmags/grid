@@ -26,6 +26,7 @@ albumService.factory('albumService', [
                 .put({ data })
                 .then(newAlbum => apiPoll(() => untilEqual({image, expectedAlbum: newAlbum.data})))
                 .then(newImage => {
+                    console.log('putAlbum');
                     $rootScope.$emit('image-updated', newImage, image);
                     return newImage;
                 });
