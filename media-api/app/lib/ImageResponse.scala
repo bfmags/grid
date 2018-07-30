@@ -6,10 +6,10 @@ import com.gu.mediaservice.lib.FeatureToggle
 import com.gu.mediaservice.lib.argo.model._
 import com.gu.mediaservice.lib.auth.{Internal, Tier}
 import com.gu.mediaservice.lib.collections.CollectionsManager
+import com.gu.mediaservice.lib.logging.GridLogger
 import com.gu.mediaservice.model._
 import lib.usagerights.CostCalculator
-import org.joda.time.{DateTime, Duration}
-import play.api.Logger
+import org.joda.time.DateTime
 import play.api.libs.functional.syntax._
 import play.api.libs.json._
 import play.utils.UriEncoding
@@ -132,7 +132,7 @@ class ImageResponse(config: MediaApiConfig, s3Client: S3Client, usageQuota: Usag
       (image, source)
     }.recoverWith {
       case e =>
-        Logger.error(s"Failed to read ElasticSearch response $id into Image object: ${e.getMessage}")
+        GridLogger.error(s"Failed to read ElasticSearch response $id into Image object: ${e.getMessage}", id)
         Failure(e)
     }.get
 

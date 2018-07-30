@@ -7,6 +7,7 @@ import com.gu.mediaservice.lib.argo.ArgoHelpers
 import com.gu.mediaservice.lib.argo.model.Link
 import com.gu.mediaservice.lib.auth.Authentication.Principal
 import com.gu.mediaservice.lib.auth._
+import com.gu.mediaservice.lib.logging.GridLogger
 import com.gu.mediaservice.model.UploadInfo
 import lib._
 import lib.imaging.MimeTypeDetection
@@ -56,7 +57,7 @@ class ImageLoaderController(auth: Authentication, downloader: Downloader, store:
           loadFile(digestedFile, request.user, uploadedBy, identifiers, uploadTime, filename)
         } recover {
           case NonFatal(e) =>
-            Logger.error(s"Unable to download image $uri", e)
+            GridLogger.error(s"Unable to download image $uri. ${e.getMessage}")
             failedUriDownload
         }
 

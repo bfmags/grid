@@ -6,6 +6,7 @@ import com.gu.mediaservice.lib.argo.ArgoHelpers
 import com.gu.mediaservice.lib.argo.model.Link
 import com.gu.mediaservice.lib.auth.Authentication.PandaUser
 import com.gu.mediaservice.lib.auth.{Authentication, Permissions, PermissionsHandler}
+import com.gu.mediaservice.lib.logging.GridLogger
 import com.gu.pandomainauth.service.GoogleAuthException
 import play.api.Logger
 import play.api.libs.json.Json
@@ -88,7 +89,7 @@ class AuthController(auth: Authentication, val config: AuthConfig,
       // Class `missing anti forgery token` as a 4XX
       // see https://github.com/guardian/pan-domain-authentication/blob/master/pan-domain-auth-play_2-6/src/main/scala/com/gu/pandomainauth/service/GoogleAuth.scala#L63
       case e: IllegalArgumentException if e.getMessage == "The anti forgery token did not match" => {
-        Logger.error(e.getMessage)
+        GridLogger.error(e.getMessage)
         respondError(BadRequest, "google-auth-exception", e.getMessage, auth.loginLinks)
       }
     }

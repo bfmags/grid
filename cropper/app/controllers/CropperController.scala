@@ -2,14 +2,14 @@ package controllers
 
 import java.net.URI
 
-import _root_.play.api.Logger
-import _root_.play.api.libs.json._
-import _root_.play.api.mvc.{BaseController, ControllerComponents}
+import play.api.libs.json._
+import play.api.mvc.{BaseController, ControllerComponents}
 import com.gu.mediaservice.lib.argo.ArgoHelpers
 import com.gu.mediaservice.lib.argo.model.Link
 import com.gu.mediaservice.lib.auth.Authentication.Principal
 import com.gu.mediaservice.lib.auth._
 import com.gu.mediaservice.lib.imaging.ExportResult
+import com.gu.mediaservice.lib.logging.GridLogger
 import com.gu.mediaservice.model._
 import lib._
 import model._
@@ -165,7 +165,7 @@ class CropperController(auth: Authentication, crops: Crops, store: CropStore, no
 
     responseFuture recoverWith {
       case NonFatal(e) =>
-          Logger.warn(s"HTTP request to fetch source failed: $e")
+          GridLogger.warn(s"HTTP request to fetch source failed: $e")
           Future.failed(ApiRequestFailed)
     }
 
@@ -178,7 +178,7 @@ class CropperController(auth: Authentication, crops: Crops, store: CropStore, no
       if (resp.status == 404) {
         throw ImageNotFound
       } else if (resp.status != 200) {
-        Logger.warn(s"HTTP status ${resp.status} ${resp.statusText} from $uri")
+        GridLogger.warn(s"HTTP status ${resp.status} ${resp.statusText} from $uri")
         throw ApiRequestFailed
       } else {
         resp.json.as[SourceImage]

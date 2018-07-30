@@ -1,13 +1,11 @@
 package com.gu.mediaservice.lib.elasticsearch
 
+import com.gu.mediaservice.lib.logging.GridLogger
 import org.elasticsearch.action.admin.indices.delete.DeleteIndexRequest
 import org.elasticsearch.client.Client
 import org.elasticsearch.client.transport.TransportClient
 import org.elasticsearch.common.settings.{ImmutableSettings, Settings}
 import org.elasticsearch.common.transport.InetSocketTransportAddress
-
-import play.api.Logger
-
 
 trait ElasticSearchClient {
 
@@ -32,7 +30,7 @@ trait ElasticSearchClient {
       .addTransportAddress(new InetSocketTransportAddress(host, port))
 
   def ensureAliasAssigned() {
-    Logger.info(s"Checking alias $imagesAlias is assigned to index…")
+    GridLogger.info(s"Checking alias $imagesAlias is assigned to index…")
 
     if (getCurrentAlias.isEmpty) {
       ensureIndexExists(initialImagesIndex)
@@ -41,7 +39,7 @@ trait ElasticSearchClient {
   }
 
   def ensureIndexExists(index: String) {
-    Logger.info("Checking index exists…")
+    GridLogger.info("Checking index exists…")
     val indexExists = client.admin.indices.prepareExists(index)
                         .execute.actionGet.isExists
 
@@ -49,7 +47,7 @@ trait ElasticSearchClient {
   }
 
   def createIndex(index: String) {
-    Logger.info(s"Creating index $index")
+    GridLogger.info(s"Creating index $index")
     client.admin.indices
       .prepareCreate(index)
       .addMapping(imageType, Mappings.imageMapping)
@@ -58,7 +56,7 @@ trait ElasticSearchClient {
   }
 
   def deleteIndex(index: String) {
-    Logger.info(s"Deleting index $index")
+    GridLogger.info(s"Deleting index $index")
     client.admin.indices.delete(new DeleteIndexRequest(index)).actionGet
   }
 
@@ -80,7 +78,7 @@ trait ElasticSearchClient {
   }
 
   def assignAliasTo(index: String) = {
-    Logger.info(s"Assigning alias $imagesAlias to $index")
+    GridLogger.info(s"Assigning alias $imagesAlias to $index")
     client.admin.indices
       .prepareAliases
       .addAlias(index, imagesAlias)
@@ -88,7 +86,7 @@ trait ElasticSearchClient {
   }
 
   def removeAliasFrom(index: String) = {
-    Logger.info(s"Removing alias $imagesAlias from $index")
+    GridLogger.info(s"Removing alias $imagesAlias from $index")
     client.admin.indices
       .prepareAliases
       .removeAlias(index, imagesAlias)
