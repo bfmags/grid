@@ -5,9 +5,10 @@ import play.api.libs.json._
 import com.gu.mediaservice.syntax._
 
 sealed trait DigitalUsageMetadata {
-  val url: URI
   val title: String
-  def toMap: Map[String, String]
+  def toMap: Map[String, String] = Map(
+    "title" -> title
+  )
 }
 
 case class ArticleUsageMetadata (
@@ -16,7 +17,6 @@ case class ArticleUsageMetadata (
   sectionId: String,
   composerUrl: Option[URI] = None
 ) extends DigitalUsageMetadata {
-  override val url: URI = webUrl
   override val title: String = webTitle
 
   private val placeholderWebTitle = "No title given"
@@ -34,11 +34,28 @@ object ArticleUsageMetadata {
   val writer: Writes[ArticleUsageMetadata] = Json.writes[ArticleUsageMetadata]
 }
 
+case class SyndicationUsageMetadata (
+  partnerName: String
+) extends DigitalUsageMetadata {
+  override val title: String = partnerName
+
+  override def toMap: Map[String, String] = Map(
+    "partnerName" -> title
+  )
+}
+
+object SyndicationUsageMetadata {
+  implicit val reader: Reads[SyndicationUsageMetadata] = Json.reads[SyndicationUsageMetadata]
+  val writer: Writes[SyndicationUsageMetadata] = Json.writes[SyndicationUsageMetadata]
+}
+
 object DigitalUsageMetadata {
   implicit val reads: Reads[DigitalUsageMetadata] =
-    __.read[ArticleUsageMetadata].map(metadata => metadata: DigitalUsageMetadata)
+    __.read[ArticleUsageMetadata].map(metadata => metadata: DigitalUsageMetadata) orElse
+    __.read[SyndicationUsageMetadata].map(metadata => metadata: SyndicationUsageMetadata)
 
   implicit val writes: Writes[DigitalUsageMetadata] = Writes[DigitalUsageMetadata]{
     case metadata: ArticleUsageMetadata => ArticleUsageMetadata.writer.writes(metadata)
+    case metadata: SyndicationUsageMetadata => SyndicationUsageMetadata.writer.writes(metadata)
   }
 }

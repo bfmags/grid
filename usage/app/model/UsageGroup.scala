@@ -4,8 +4,9 @@ import play.api.Logger
 import play.api.libs.json._
 import com.gu.contentapi.client.model.v1.{Content, Element, ElementType}
 import com.gu.contentatom.thrift.{Atom, AtomData}
+import com.gu.mediaservice.model.usage.SyndicationUsageRequest
 import com.gu.mediaservice.model.{DigitalUsageMetadata, PrintUsageRecord, PublishedUsageStatus, UsageStatus}
-import lib.{UsageConfig, LiveContentApi, MD5, UsageMetadataBuilder}
+import lib.{LiveContentApi, MD5, UsageConfig, UsageMetadataBuilder}
 import org.joda.time.DateTime
 
 case class UsageGroup(
@@ -25,6 +26,12 @@ class UsageGroupOps(config: UsageConfig, mediaUsageOps: MediaUsageOps, liveConte
     Some(printUsage.printUsageMetadata.issueDate)
   ).flatten.map(_.toString).mkString("_"))}"
 
+  def buildId(syndicationUsageRequest: SyndicationUsageRequest): String = List(
+    "syndication",
+    syndicationUsageRequest.syndicationUsageMetadata.partnerName,
+    syndicationUsageRequest.mediaId
+  ).mkString("_")
+
   def build(content: Content, status: UsageStatus, lastModified: DateTime, isReindex: Boolean) =
     ContentWrapper.build(content, status, lastModified).map(contentWrapper => {
       val usages = createUsages(contentWrapper, isReindex)
@@ -43,6 +50,17 @@ class UsageGroupOps(config: UsageConfig, mediaUsageOps: MediaUsageOps, liveConte
         printUsageRecord.dateAdded
       )
     })
+
+  def build(syndicationUsageRequest: SyndicationUsageRequest) = {
+    val usageGroupId = buildId(syndicationUsageRequest)
+
+    UsageGroup(
+      Set(mediaUsageOps.build(syndicationUsageRequest, usageGroupId)),
+      usageGroupId,
+      syndicationUsageRequest.usageStatus,
+      syndicationUsageRequest.dateAdded
+    )
+  }
 
   def createUsages(contentWrapper: ContentWrapper, isReindex: Boolean) = {
     // Generate unique UUID to track extract job
@@ -88,7 +106,7 @@ class UsageGroupOps(config: UsageConfig, mediaUsageOps: MediaUsageOps, liveConte
     val dateLimit = new DateTime(config.usageDateLimit)
     val contentFirstPublished = liveContentApi.getContentFirstPublished(content)
     usageStatus match {
-      case _: PublishedUsageStatus => contentFirstPublished.exists(_.isAfter(dateLimit))
+      case PublishedUsageStatus => contentFirstPublished.exists(_.isAfter(dateLimit))
       case _ => true
     }
   }

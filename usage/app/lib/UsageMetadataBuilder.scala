@@ -3,14 +3,14 @@ package lib
 import java.net.URI
 
 import com.gu.contentapi.client.model.v1.Content
-import com.gu.mediaservice.model.{ArticleUsageMetadata, PrintImageSize, PrintUsageMetadata}
+import com.gu.mediaservice.model._
 import org.joda.time.format.ISODateTimeFormat
 
 import scala.util.Try
 
 class UsageMetadataBuilder(config: UsageConfig) {
 
-  def buildDigital(metadataMap: Map[String, Any]): Option[ArticleUsageMetadata] = {
+  private def buildDigitalMetadata(metadataMap: Map[String, Any]): Option[ArticleUsageMetadata] = {
     Try {
       ArticleUsageMetadata(
         URI.create(metadataMap("webUrl").asInstanceOf[String]),
@@ -19,6 +19,19 @@ class UsageMetadataBuilder(config: UsageConfig) {
         metadataMap.get("composerUrl").map(x => URI.create(x.asInstanceOf[String]))
       )
     }.toOption
+  }
+
+  private def buildSyndicationMetadata(metadataMap: Map[String, Any]): Option[SyndicationUsageMetadata] = {
+    Try {
+      SyndicationUsageMetadata(
+        metadataMap("partnerName").asInstanceOf[String]
+      )
+    }.toOption
+  }
+
+  def buildDigital(metadataMap: Map[String, Any]): Option[DigitalUsageMetadata] = {
+    buildSyndicationMetadata(metadataMap) orElse
+    buildDigitalMetadata(metadataMap)
   }
 
   def buildPrint(metadataMap: Map[String, Any]): Option[PrintUsageMetadata] = {

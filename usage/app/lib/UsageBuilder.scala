@@ -20,7 +20,7 @@ object UsageBuilder {
     usage.digitalUsageMetadata
   )
 
-  private def buildStatusString(usage: MediaUsage): UsageStatus = if (usage.isRemoved) RemovedUsageStatus() else usage.status
+  private def buildStatusString(usage: MediaUsage): UsageStatus = if (usage.isRemoved) RemovedUsageStatus else usage.status
 
   private def buildId(usage: MediaUsage): String = {
     UsageTableFullKey.build(usage).toString
@@ -28,7 +28,7 @@ object UsageBuilder {
 
   private def buildUsageReference(usage: MediaUsage): List[UsageReference] = {
     usage.usageType match {
-      case "digital" => buildWebUsageReference(usage)
+      case "digital" => buildDigitalUsageReference(usage)
       case "print" => buildPrintUsageReference(usage)
     }
   }
@@ -46,9 +46,12 @@ object UsageBuilder {
 
     }).getOrElse(List[UsageReference]())
 
-  private def buildWebUsageReference(usage: MediaUsage): List[UsageReference] = usage.digitalUsageMetadata.map {
+  private def buildDigitalUsageReference(usage: MediaUsage): List[UsageReference] = usage.digitalUsageMetadata.map {
     case article: ArticleUsageMetadata => List(
       UsageReference("frontend", Some(article.webUrl), Some(article.webTitle))
     ) ++ article.composerUrl.map(url => UsageReference("composer", Some(url)))
+    case syndication: SyndicationUsageMetadata => List(
+      UsageReference("syndication", name = Some(syndication.partnerName))
+    )
   }.getOrElse(List[UsageReference]())
 }

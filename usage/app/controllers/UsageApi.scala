@@ -6,7 +6,7 @@ import com.gu.contentapi.client.model.ItemQuery
 import com.gu.mediaservice.lib.argo.ArgoHelpers
 import com.gu.mediaservice.lib.argo.model.{EntityResponse, Link}
 import com.gu.mediaservice.lib.auth.Authentication
-import com.gu.mediaservice.model.{PrintUsageRequest, Usage}
+import com.gu.mediaservice.model.{PrintUsageRequest, SyndicationUsageMetadata, Usage}
 import lib._
 import model._
 import play.api.Logger
@@ -15,6 +15,7 @@ import play.api.mvc._
 import play.utils.UriEncoding
 import com.gu.mediaservice.lib.argo.model.{Action => ArgoAction}
 import com.gu.mediaservice.lib.logging.GridLogger
+import com.gu.mediaservice.model.usage.SyndicationUsageRequest
 
 import scala.concurrent.{ExecutionContext, Future}
 import scala.util.Try
@@ -148,6 +149,23 @@ class UsageApi(auth: Authentication, usageTable: UsageTable, usageGroup: UsageGr
       )
     }
   }
+
+  def setSyndicationUsages() = auth(parse.json) { req => {
+    val syndicationUsageRequest = (req.body \ "data").validate[SyndicationUsageRequest]
+
+    syndicationUsageRequest.fold(
+      e => respondError(
+        BadRequest,
+        errorKey = "syndication-usage-parse-failed",
+        errorMessage = JsError.toJson(e).toString
+      ),
+      sur => {
+        val usageGroups = List(usageGroup.build(sur))
+        usageGroups.foreach(usageRecorder.usageSubject.onNext)
+        Accepted
+      }
+    )
+  }}
 
   def deleteUsages(mediaId: String) = auth.async {
     usageTable.queryByImageId(mediaId).map(usages => {

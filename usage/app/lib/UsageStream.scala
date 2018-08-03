@@ -1,6 +1,6 @@
 package lib
 
-import com.gu.mediaservice.model.{PendingUsageStatus, PublishedUsageStatus}
+import com.gu.mediaservice.model.{PendingUsageStatus, PublishedUsageStatus, UsageStatus}
 import model._
 import rx.lang.scala.Observable
 
@@ -13,9 +13,9 @@ class UsageStream(usageGroup: UsageGroupOps) {
 
   val liveObservable: Observable[UsageGroup] = getObservable(liveContentStream)
 
-  def createStatus(container: ContentContainer) = container match {
-    case PreviewContentItem(_,_,_) => PendingUsageStatus()
-    case LiveContentItem(_,_,_) => PublishedUsageStatus()
+  def createStatus(container: ContentContainer): UsageStatus = container match {
+    case PreviewContentItem(_,_,_) => PendingUsageStatus
+    case LiveContentItem(_,_,_) => PublishedUsageStatus
   }
 
   private def getObservable(contentStream: Observable[ContentContainer]) = {

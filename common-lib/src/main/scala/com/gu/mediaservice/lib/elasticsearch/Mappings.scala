@@ -210,7 +210,9 @@ object Mappings {
       "webTitle" -> nonAnalyzedString,
       "webUrl" -> nonAnalyzedString,
       "sectionId" -> nonAnalyzedString,
-      "composerUrl" -> nonAnalyzedString
+      "composerUrl" -> nonAnalyzedString,
+      "partnerName" -> nonAnalyzedString,
+      "containerId" -> nonAnalyzedString
     )
 
   val usagesMapping =
@@ -225,7 +227,8 @@ object Mappings {
       "dateRemoved"  -> dateFormat,
       "lastModified" -> dateFormat,
       "printUsageMetadata" -> printUsageMetadata,
-      "digitalUsageMetadata" -> digitalUsageMetadata
+      "digitalUsageMetadata" -> digitalUsageMetadata,
+      "frontsDigitalUsageMetadata" -> digitalUsageMetadata
     )(nestedType)
 
 

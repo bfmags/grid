@@ -1,6 +1,7 @@
 package model
 
 import com.gu.mediaservice.model.PrintUsageRecord
+import com.gu.mediaservice.model.usage.SyndicationUsageRequest
 import lib.MD5
 
 
@@ -23,5 +24,11 @@ object UsageId {
     Some(mediaWrapper.mediaId),
     Some(mediaWrapper.index),
     Some(mediaWrapper.contentStatus)
+  ))
+
+  def build(syndicationUsageRequest: SyndicationUsageRequest) = buildId(List(
+    Some(syndicationUsageRequest.mediaId),
+    Some(syndicationUsageRequest.syndicationUsageMetadata.partnerName),
+    Some(syndicationUsageRequest.usageStatus)
   ))
 }

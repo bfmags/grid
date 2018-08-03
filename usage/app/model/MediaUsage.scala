@@ -2,6 +2,7 @@ package model
 
 import com.amazonaws.services.dynamodbv2.document.Item
 import com.gu.mediaservice.model._
+import com.gu.mediaservice.model.usage.SyndicationUsageRequest
 import lib.UsageMetadataBuilder
 import org.joda.time.DateTime
 
@@ -46,10 +47,7 @@ class MediaUsageOps(usageMetadataBuilder: UsageMetadataBuilder) {
       item.getString("media_id"),
       item.getString("usage_type"),
       item.getString("media_type"),
-      item.getString("usage_status") match {
-        case "pending" => PendingUsageStatus()
-        case "published" => PublishedUsageStatus()
-      },
+      UsageStatus(item.getString("usage_status")),
       Option(item.getMap[Any]("print_metadata"))
         .map(_.asScala.toMap).flatMap(usageMetadataBuilder.buildPrint),
       Option(item.getMap[Any]("digital_metadata"))
@@ -84,6 +82,22 @@ class MediaUsageOps(usageMetadataBuilder: UsageMetadataBuilder) {
       printUsageMetadata = None,
       digitalUsageMetadata = Some(mediaWrapper.usageMetadata),
       lastModified = mediaWrapper.lastModified
+    )
+  }
+
+  def build(syndicationUsageRequest: SyndicationUsageRequest, groupId: String): MediaUsage = {
+    val usageId = UsageId.build(syndicationUsageRequest)
+
+    MediaUsage(
+      usageId,
+      groupId,
+      syndicationUsageRequest.mediaId,
+      usageType = "digital",
+      mediaType = "image",
+      syndicationUsageRequest.usageStatus,
+      printUsageMetadata = None,
+      digitalUsageMetadata = Some(syndicationUsageRequest.syndicationUsageMetadata),
+      lastModified = syndicationUsageRequest.dateAdded
     )
   }
 }
