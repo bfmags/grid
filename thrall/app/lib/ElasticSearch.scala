@@ -11,6 +11,7 @@ import org.elasticsearch.action.updatebyquery.UpdateByQueryResponse
 import org.elasticsearch.client.UpdateByQueryClientWrapper
 import org.elasticsearch.index.engine.{DocumentMissingException, VersionConflictEngineException}
 import org.elasticsearch.index.query.FilterBuilders.{andFilter, missingFilter}
+import org.elasticsearch.index.query.FilteredQueryBuilder
 import org.elasticsearch.index.query.QueryBuilders.{boolQuery, filteredQuery, matchAllQuery, matchQuery}
 import org.elasticsearch.script.ScriptService
 import org.joda.time.DateTime
@@ -262,6 +263,19 @@ class ElasticSearch(config: ThrallConfig, metrics: ThrallMetrics) extends Elasti
       (__ \ "usages").json.prune
 
     image.transform(removeUploadInformation).get
+  }
+
+  def getImagesInPhotoshootWithInferredSyndicationRights(photoshoot: Photoshoot)(implicit ex: ExecutionContext): Future[List[Image]] = {
+    val filteredQuery = new FilteredQueryBuilder(
+      matchQuery(photoshootField("title"), photoshoot.title),
+      missingFilter("syndicationRights.published")
+    )
+
+    client.prepareSearch(imagesAlias).setTypes(imageType)
+      .setQuery(filteredQuery)
+      .executeAndLog(s"get images in photoshoot ${photoshoot.title} with inferred syndication rights")
+      .map(_.getHits.hits.toList.flatMap(_.sourceOpt))
+      .map(_.asInstanceOf[List[Image]])
   }
 
   private val addToSuggestersScript =
